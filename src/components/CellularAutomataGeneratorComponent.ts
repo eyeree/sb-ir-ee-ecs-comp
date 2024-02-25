@@ -9,9 +9,7 @@ import { Vector3 } from 'three';
 import { GeometryTypeEnum } from '@etherealengine/engine/src/scene/constants/GeometryTypeEnum';
 import { useHookstate } from '@etherealengine/hyperflux';
 import { CellularAutomataCellStateComponent } from './CellularAutomataCellStateComponent';
-import { CellularAutomataCellComponent } from './CellularAutomataCellComponent';
-import { ColliderComponent } from '@etherealengine/spatial/src/physics/components/ColliderComponent';
-import { RigidBodyComponent } from '@etherealengine/spatial/src/physics/components/RigidBodyComponent';
+import { CellularAutomataCellBehaviorComponent } from './CellularAutomataCellBehaviorComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 
 export const CellularAutomataGeneratorComponent = defineComponent({
@@ -94,7 +92,7 @@ export const CellularAutomataGeneratorComponent = defineComponent({
           cellEntities[row].push(createEntity());
           const entity = createEntity();
           setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
-          setComponent(entity, CellularAutomataCellComponent, { 
+          setComponent(entity, CellularAutomataCellBehaviorComponent, { 
             inputA: row === 0 || col - 1 < 0 ? deadCellEntity : cellEntities[row - 1][col - 1], 
             inputB: row === 0 ? deadCellEntity : cellEntities[row - 1][col], 
             inputC: row === 0 || col + 1 >= cols.value ? deadCellEntity : cellEntities[row - 1][col + 1]

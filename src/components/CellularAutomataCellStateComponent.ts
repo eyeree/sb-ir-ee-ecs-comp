@@ -1,13 +1,6 @@
-import { Entity, createEntity, defineComponent, setComponent, useComponent, useEntityContext, removeEntity } from '@etherealengine/ecs';
+import { defineComponent, useComponent, useEntityContext } from '@etherealengine/ecs';
 import { useEffect } from 'react';
 import { setCallback } from '@etherealengine/spatial/src/common/CallbackComponent';
-import { PrimitiveGeometryComponent } from '@etherealengine/engine/src/scene/components/PrimitiveGeometryComponent';
-import { TransformComponent } from '@etherealengine/spatial';
-import { NameComponent } from '@etherealengine/spatial/src/common/NameComponent';
-import { VisibleComponent } from '@etherealengine/spatial/src/renderer/components/VisibleComponent';
-import { Vector3 } from 'three';
-import { GeometryTypeEnum } from '@etherealengine/engine/src/scene/constants/GeometryTypeEnum';
-import { useHookstate } from '@etherealengine/hyperflux';
 
 export type CellState = 'dead' | 'alive';
 
@@ -42,9 +35,9 @@ export const CellularAutomataCellStateComponent = defineComponent({
 
     useEffect(() => {
       if (cellState.state.value === 'alive') {
-        setComponent(thisEntity, VisibleComponent, true);
+        // setComponent(thisEntity, VisibleComponent, true);
       } else {
-        setComponent(thisEntity, VisibleComponent, false);
+        // setComponent(thisEntity, VisibleComponent, false);
       }
     }, [cellState.state.value]);
 
