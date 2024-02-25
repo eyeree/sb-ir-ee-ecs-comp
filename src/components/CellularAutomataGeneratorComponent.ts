@@ -1,16 +1,15 @@
 import { Entity, createEntity, defineComponent, setComponent, useComponent, useEntityContext, removeEntity } from '@etherealengine/ecs';
 import { useEffect } from 'react';
 import { setCallback } from '@etherealengine/spatial/src/common/CallbackComponent';
-import { PrimitiveGeometryComponent } from '@etherealengine/engine/src/scene/components/PrimitiveGeometryComponent';
 import { TransformComponent } from '@etherealengine/spatial';
 import { NameComponent } from '@etherealengine/spatial/src/common/NameComponent';
 import { VisibleComponent } from '@etherealengine/spatial/src/renderer/components/VisibleComponent';
 import { Vector3 } from 'three';
-import { GeometryTypeEnum } from '@etherealengine/engine/src/scene/constants/GeometryTypeEnum';
-import { useHookstate } from '@etherealengine/hyperflux';
+import { getState, useHookstate } from '@etherealengine/hyperflux';
 import { CellularAutomataCellStateComponent, deadCellEntity } from './CellularAutomataCellStateComponent';
 import { CellularAutomataCellBehaviorComponent } from './CellularAutomataCellBehaviorComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
+import { EngineState } from '@etherealengine/spatial/src/EngineState';
 
 export const CellularAutomataGeneratorComponent = defineComponent({
   name: 'CellularAutomataGeneratorComponent',
@@ -18,11 +17,11 @@ export const CellularAutomataGeneratorComponent = defineComponent({
 
   onInit: (entity) => { 
     return {
-      rows: 50,
-      cols: 20,
-      space: 0.05,
+      rows: 100,
+      cols: 40,
+      space: 0.025,
       bottom: 0.5,
-      size: 0.25,
+      size: 0.1,
       distance: -2
     }
   },
@@ -61,13 +60,16 @@ export const CellularAutomataGeneratorComponent = defineComponent({
   },
 
   reactor: function () {
+
+    if (getState(EngineState).isEditing) return null;
+
     const thisEntity = useEntityContext();
     const generatorComponent = useComponent(thisEntity, CellularAutomataGeneratorComponent);
     const cellEntitiesState = useHookstate<null|Entity[][]>(null);
 
     function createCells() {
 
-      console.log('>>>>>', 'createCells', generatorComponent);
+      // console.log('>>>>>', 'createCells', generatorComponent);
 
       const { rows, cols, space, bottom, size, distance } = generatorComponent;
 
@@ -90,17 +92,6 @@ export const CellularAutomataGeneratorComponent = defineComponent({
           setComponent(entity, TransformComponent, { 
             position: new Vector3(x, y, z),
             scale: scale
-          });
-          setComponent(entity, PrimitiveGeometryComponent, {
-            geometryType: GeometryTypeEnum.BoxGeometry,
-            geometryParams: {
-              width: 1,
-              height: 1,
-              depth: 1,
-              widthSegments: 1,
-              heightSegments: 1,
-              depthSegments: 1
-            }
           });
           setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
           setComponent(entity, CellularAutomataCellBehaviorComponent, { 

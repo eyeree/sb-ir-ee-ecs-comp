@@ -64,7 +64,7 @@ export const CellularAutomataClickSystem = defineSystem({
   execute: () => {
     const clickedEntity = getClickedEntity();
     if(!clickedEntity) return;
-    console.log('Clicked entity', clickedEntity);
+    // console.log('Clicked entity', clickedEntity);
     getCallback(clickedEntity, 'onClick')?.(clickedEntity);
   }
 });

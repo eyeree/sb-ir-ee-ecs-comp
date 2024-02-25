@@ -548,19 +548,19 @@
           }
         },
         {
-          "name": "sb.cellularAutomata.generator",
-          "props": {
-            "rows": 3,
-            "cols": 4,
-            "space": 0.05,
-            "bottom": 0.5,
-            "size": 0.25,
-            "distance": -2
-          }
-        },
-        {
           "name": "EE_visible",
           "props": true
+        },
+        {
+          "name": "sb.cellularAutomata.generator",
+          "props": {
+            "rows": 50,
+            "cols": 20,
+            "space": 0.025,
+            "bottom": 0.5,
+            "size": 0.1,
+            "distance": -2
+          }
         }
       ],
       "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
