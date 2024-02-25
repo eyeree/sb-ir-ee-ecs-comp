@@ -350,6 +350,10 @@
           }
         },
         {
+          "name": "EE_visible",
+          "props": {}
+        },
+        {
           "name": "EE_ground_plane",
           "props": {
             "color": 8311585,
@@ -362,10 +366,6 @@
             "cast": false,
             "receive": true
           }
-        },
-        {
-          "name": "EE_visible",
-          "props": true
         }
       ],
       "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
@@ -434,16 +434,16 @@
           }
         },
         {
+          "name": "EE_visible",
+          "props": {}
+        },
+        {
           "name": "EE_hemisphere_light",
           "props": {
             "skyColor": 16777215,
             "groundColor": 16777215,
             "intensity": 1
           }
-        },
-        {
-          "name": "EE_visible",
-          "props": true
         }
       ],
       "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
@@ -494,7 +494,7 @@
       "index": 5,
       "name": "directional light"
     },
-    "b19ac402-2bb4-453d-87b1-aabc405057a1": {
+    "4b672e6b-d1a4-4404-94f1-99e53d13e67e": {
       "name": "generator",
       "components": [
         {
@@ -522,15 +522,7 @@
           "name": "EE_primitive_geometry",
           "props": {
             "geometryType": 1,
-            "geometryParams": {
-              "radius": 1,
-              "widthSegments": 32,
-              "heightSegments": 16,
-              "phiStart": 0,
-              "phiLength": 6.283185307179586,
-              "thetaStart": 0,
-              "thetaLength": 3.141592653589793
-            }
+            "geometryParams": null
           }
         },
         {
@@ -545,102 +537,34 @@
             },
             "friction": 0.5,
             "restitution": 0.5,
-            "collisionLayer": 3,
-            "collisionMask": 16
-          }
-        },
-        {
-          "name": "EE_rigidbody",
-          "props": {
-            "type": "fixed"
-          }
-        },
-        {
-          "name": "EE_visible",
-          "props": true
-        },
-        {
-          "name": "sb.cellularAutomata.generator",
-          "props": {
-            "rows": 50,
-            "cols": 20,
-            "space": 0.1,
-            "bottom": 0.5,
-            "size": 0.5,
-            "distance": -2
-          }
-        }
-      ],
-      "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
-      "index": 6
-    },
-    "d353449f-6cfd-4717-a570-cedbf97297b0": {
-      "name": "EE_transform",
-      "components": [
-        {
-          "name": "EE_transform",
-          "props": {
-            "position": {
-              "x": 1.5,
-              "y": 1.5,
-              "z": 0
-            },
-            "rotation": {
-              "x": 0,
-              "y": 0,
-              "z": 0,
-              "w": 1
-            },
-            "scale": {
-              "x": 2,
-              "y": 0.5,
-              "z": 0.10000000000000009
-            }
-          }
-        },
-        {
-          "name": "EE_primitive_geometry",
-          "props": {
-            "geometryType": 0,
-            "geometryParams": {
-              "width": 1,
-              "height": 1,
-              "depth": 1,
-              "widthSegments": 1,
-              "heightSegments": 1,
-              "depthSegments": 1
-            }
-          }
-        },
-        {
-          "name": "EE_rigidbody",
-          "props": {
-            "type": "fixed"
-          }
-        },
-        {
-          "name": "EE_collider",
-          "props": {
-            "shape": "box",
-            "mass": 1,
-            "massCenter": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "friction": 0.5,
-            "restitution": 0.5,
             "collisionLayer": 1,
             "collisionMask": 16
           }
         },
         {
+          "name": "EE_rigidbody",
+          "props": {
+            "type": "fixed"
+          }
+        },
+        {
+          "name": "sb.cellularAutomata.generator",
+          "props": {
+            "rows": 3,
+            "cols": 4,
+            "space": 0.05,
+            "bottom": 0.5,
+            "size": 0.25,
+            "distance": -2
+          }
+        },
+        {
           "name": "EE_visible",
           "props": true
         }
       ],
       "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
-      "index": 7
+      "index": 6
     }
   },
   "root": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71"

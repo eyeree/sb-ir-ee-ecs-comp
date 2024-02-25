@@ -1,4 +1,4 @@
-import { defineComponent, useComponent, useEntityContext } from '@etherealengine/ecs';
+import { createEntity, defineComponent, setComponent, useComponent, useEntityContext } from '@etherealengine/ecs';
 import { useEffect } from 'react';
 import { setCallback } from '@etherealengine/spatial/src/common/CallbackComponent';
 
@@ -29,6 +29,7 @@ export const CellularAutomataCellStateComponent = defineComponent({
     useEffect(() => {
       setCallback(thisEntity, 'onClick', () => {
         const newState = cellState.state.value === 'alive' ? 'dead' : 'alive';
+        console.log('>>>>>', 'onClick', thisEntity, cellState.state.value, '-->', newState);
         cellState.set({ state: newState });
       });
     }, []);
@@ -47,3 +48,6 @@ export const CellularAutomataCellStateComponent = defineComponent({
 
 });
 
+export const deadCellEntity = createEntity();
+setComponent(deadCellEntity, CellularAutomataCellStateComponent, { state: 'dead' });
+console.log('>>>>>', 'deadCellEntity', deadCellEntity);

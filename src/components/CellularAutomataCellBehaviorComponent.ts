@@ -1,6 +1,7 @@
 import { Entity, defineComponent, useComponent, useEntityContext } from '@etherealengine/ecs';
 import { useEffect } from 'react';
-import { CellState, CellularAutomataCellStateComponent } from './CellularAutomataCellStateComponent';
+import { CellState, CellularAutomataCellStateComponent, deadCellEntity } from './CellularAutomataCellStateComponent';
+import { useHookstate } from '@etherealengine/hyperflux';
 
 export type CellInput = Entity
 export type CellComponentType = {
@@ -13,9 +14,17 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
   name: 'CellularAutomataCellBehaviorComponent',
   jsonID: 'sb.cellularAutomata.cell',
 
+  onInit: (entity) => { 
+    return {
+      inputA: deadCellEntity,
+      inputB: deadCellEntity,
+      inputC: deadCellEntity
+    }
+  },
+
   onSet: (entity, component, json) => {
     if (!json) return
-    console.log('>>>>>', 'CellularAutomataCellBehaviorComponent.onSet', entity, json)
+    console.log('>>>>>', 'onSet', entity, json);
     if (json.inputA) {
       component.inputA.set(json.inputA)
     }
@@ -30,14 +39,20 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
   reactor: function () {
     const thisEntity = useEntityContext();
     const cellComponent = useComponent(thisEntity, CellularAutomataCellBehaviorComponent);
-    const inputAState = useComponent(cellComponent.inputA.value, CellularAutomataCellStateComponent).state.value;
-    const inputBState = useComponent(cellComponent.inputB.value, CellularAutomataCellStateComponent).state.value;
-    const inputCState = useComponent(cellComponent.inputC.value, CellularAutomataCellStateComponent).state.value;
+    const inputAStateComponent = useComponent(cellComponent.inputA.value, CellularAutomataCellStateComponent);
+    const inputBStateComponent = useComponent(cellComponent.inputB.value, CellularAutomataCellStateComponent);
+    const inputCStateComponent = useComponent(cellComponent.inputC.value, CellularAutomataCellStateComponent);
+    const inputAState = inputAStateComponent.state.value;
+    const inputBState = inputBStateComponent.state.value;
+    const inputCState = inputCStateComponent.state.value;
     const cellState = useComponent(thisEntity, CellularAutomataCellStateComponent);
+
+    console.log('>>>>>', 'behavior', thisEntity, cellState.value, '-->', cellComponent.inputA.value, inputAState, cellComponent.inputB.value, inputBState, cellComponent.inputC.value, inputCState );
+
     
     useEffect(() => {
-      const newCellState:CellState = 'alive';
-      console.log('>>>>>', 'useEffect', thisEntity, cellState.value, '-->', inputAState, inputBState, inputCState, '-->', newCellState );
+      const newCellState:CellState = Math.random() < 0.5 ? 'alive' : 'dead';
+      console.log('>>>>>', 'behavior input state change', thisEntity, cellState.value, '-->', inputAState, inputBState, inputCState, '-->', newCellState );
       cellState.set({ state: newCellState });
     }, [inputAState, inputBState, inputCState]);
 
