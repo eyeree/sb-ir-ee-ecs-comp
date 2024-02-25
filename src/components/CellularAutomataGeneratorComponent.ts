@@ -8,6 +8,11 @@ import { VisibleComponent } from '@etherealengine/spatial/src/renderer/component
 import { Vector3 } from 'three';
 import { GeometryTypeEnum } from '@etherealengine/engine/src/scene/constants/GeometryTypeEnum';
 import { useHookstate } from '@etherealengine/hyperflux';
+import { CellularAutomataCellStateComponent } from './CellularAutomataCellStateComponent';
+import { CellularAutomataCellComponent } from './CellularAutomataCellComponent';
+import { ColliderComponent } from '@etherealengine/spatial/src/physics/components/ColliderComponent';
+import { RigidBodyComponent } from '@etherealengine/spatial/src/physics/components/RigidBodyComponent';
+import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 
 export const CellularAutomataGeneratorComponent = defineComponent({
   name: 'CellularAutomataGeneratorComponent',
@@ -60,7 +65,8 @@ export const CellularAutomataGeneratorComponent = defineComponent({
   reactor: function () {
     const thisEntity = useEntityContext();
     const generatorComponent = useComponent(thisEntity, CellularAutomataGeneratorComponent);
-    const cellEntities = useHookstate<null|Entity[]>(null);
+    const cellEntitiesState = useHookstate<null|Entity[][]>(null);
+    const deadCellEntityState = useHookstate<null|Entity>(null);
 
     function createCells() {
 
@@ -75,12 +81,24 @@ export const CellularAutomataGeneratorComponent = defineComponent({
 
       const scale = new Vector3(size.value, size.value, size.value);
 
-      const createdEntities = [] as Entity[];
+      // Better way to handle a singleton? Don't need to re-create it every time.
+      const deadCellEntity = createEntity();
+      deadCellEntityState.set(deadCellEntity);
+      setComponent(deadCellEntity, CellularAutomataCellStateComponent, { state: 'dead' });
+
+      const cellEntities: Entity[][] = [];
 
       for(let row = 0; row < rows.value; row++) {
+        cellEntities.push([]);
         for(let col = 0; col < cols.value; col++) {
+          cellEntities[row].push(createEntity());
           const entity = createEntity();
-          createdEntities.push(entity);
+          setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
+          setComponent(entity, CellularAutomataCellComponent, { 
+            inputA: row === 0 || col - 1 < 0 ? deadCellEntity : cellEntities[row - 1][col - 1], 
+            inputB: row === 0 ? deadCellEntity : cellEntities[row - 1][col], 
+            inputC: row === 0 || col + 1 >= cols.value ? deadCellEntity : cellEntities[row - 1][col + 1]
+          });
           setComponent(entity, NameComponent, `cell-${row}-${col}`);
           setComponent(entity, VisibleComponent)
           setComponent(entity, TransformComponent, { 
@@ -98,32 +116,37 @@ export const CellularAutomataGeneratorComponent = defineComponent({
               depthSegments: 1
             }
           });
+          setComponent(entity, CellularAutomataClickableComponent, { shape: 'box' });
           x += size.value + space.value;
         }
         x = left;
         y += size.value + space.value;
       }
 
-      cellEntities.set(createdEntities);
+      cellEntitiesState.set(cellEntities);
 
     }
 
     function deleteCells() {
 
-      console.log('>>>>>', 'deleteCells', cellEntities.value!.length);
+      console.log('>>>>>', 'deleteCells', cellEntitiesState.value!.length);
 
-      for (let entity of cellEntities.value!) {
-        removeEntity(entity)
+      for(const row of cellEntitiesState.value!) {
+        for (const entity of row) {
+          removeEntity(entity)
+        }
       }
+      cellEntitiesState.set(null);
 
-      cellEntities.set(null);
+      removeEntity(deadCellEntityState.value!);
+      deadCellEntityState.set(null);
 
     }
     
     useEffect(() => {
-      console.log('>>>>>', 'useEffect', cellEntities.value ? 'deleteCells' : 'createCells');
-      setCallback(thisEntity, 'onClick', cellEntities.value ? deleteCells : createCells);
-    }, [cellEntities.value]);
+      console.log('>>>>>', 'useEffect', cellEntitiesState.value ? 'deleteCells' : 'createCells');
+      setCallback(thisEntity, 'onClick', cellEntitiesState.value ? deleteCells : createCells);
+    }, [cellEntitiesState.value]);
 
     return null;
   }

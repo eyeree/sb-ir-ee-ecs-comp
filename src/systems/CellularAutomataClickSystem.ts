@@ -10,10 +10,9 @@ import { getInteractionGroups } from "@etherealengine/spatial/src/physics/functi
 import { PhysicsState } from "@etherealengine/spatial/src/physics/state/PhysicsState";
 import { SceneQueryType } from "@etherealengine/spatial/src/physics/types/PhysicsTypes";
 import { Vector3 } from "three";
+import { CellularAutomataClickCollisionGroup } from "../components/CellularAutomataClickableComponent";
 
-export const CellularAutomataCollisionGroup = 0x0010;
-
-const interactionGroups = getInteractionGroups(CellularAutomataCollisionGroup, CollisionGroups.Default)
+const interactionGroups = getInteractionGroups(CellularAutomataClickCollisionGroup, CollisionGroups.Default)
 
 const raycastComponentData = {
   type: SceneQueryType.Closest,
