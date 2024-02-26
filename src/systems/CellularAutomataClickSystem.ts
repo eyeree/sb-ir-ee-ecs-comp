@@ -30,10 +30,13 @@ function isClick() {
     const inputSource = getComponent(inputEntity, InputSourceComponent)
     const buttons = inputSource.buttons;
     if(buttons.PrimaryClick?.down) {
-      return true;
+      return { 
+        shift: buttons.ShiftLeft || buttons.ShiftRight,
+        ctrl: buttons.ControlLeft || buttons.ControlRight,
+      };
     }
   }
-  return false;
+  return null;
 }
 
 function getEntityAtPointer() {
@@ -62,9 +65,16 @@ export const CellularAutomataClickSystem = defineSystem({
   uuid: 'sb.cellularAutomata.click',
   insert: { after: AnimationSystemGroup },
   execute: () => {
-    const clickedEntity = getClickedEntity();
+    const click = isClick();
+    if(!click) return
+    const clickedEntity = getEntityAtPointer();
     if(!clickedEntity) return;
-    // console.log('Clicked entity', clickedEntity);
-    getCallback(clickedEntity, 'onClick')?.(clickedEntity);
+    if(click.ctrl) {
+      getCallback(clickedEntity, 'onCtrlClick')?.(clickedEntity);
+    } else if(click.shift) {
+      getCallback(clickedEntity, 'onShiftClick')?.(clickedEntity);
+    } else { 
+      getCallback(clickedEntity, 'onClick')?.(clickedEntity);
+    }
   }
 });

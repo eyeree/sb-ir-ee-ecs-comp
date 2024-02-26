@@ -493,6 +493,79 @@
       "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
       "index": 5,
       "name": "directional light"
+    },
+    "4b672e6b-d1a4-4404-94f1-99e53d13e67e": {
+      "name": "generator",
+      "components": [
+        {
+          "name": "EE_transform",
+          "props": {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          }
+        },
+        {
+          "name": "EE_primitive_geometry",
+          "props": {
+            "geometryType": 1,
+            "geometryParams": null
+          }
+        },
+        {
+          "name": "EE_collider",
+          "props": {
+            "shape": "sphere",
+            "mass": 1,
+            "massCenter": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "friction": 0.5,
+            "restitution": 0.5,
+            "collisionLayer": 1,
+            "collisionMask": 16
+          }
+        },
+        {
+          "name": "EE_rigidbody",
+          "props": {
+            "type": "fixed"
+          }
+        },
+        {
+          "name": "sb.cellularAutomata.generator",
+          "props": {
+            "rows": 64,
+            "cols": 64,
+            "space": 0.025,
+            "bottom": 0.5,
+            "size": 0.1,
+            "distance": -2,
+            "rule": 54
+          }
+        },
+        {
+          "name": "EE_visible",
+          "props": true
+        }
+      ],
+      "parent": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71",
+      "index": 6
     }
   },
   "root": "d32b1c4e-d08e-4fb0-9107-4c88a281ee71"

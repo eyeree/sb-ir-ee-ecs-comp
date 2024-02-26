@@ -7,7 +7,7 @@ import { VisibleComponent } from '@etherealengine/spatial/src/renderer/component
 import { Vector3 } from 'three';
 import { getState, useHookstate } from '@etherealengine/hyperflux';
 import { CellularAutomataCellStateComponent, deadCellEntity } from './CellularAutomataCellStateComponent';
-import { CellularAutomataCellBehaviorComponent } from './CellularAutomataCellBehaviorComponent';
+import { CellularAutomataCellBehaviorComponent, getRuleBinary } from './CellularAutomataCellBehaviorComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 import { EngineState } from '@etherealengine/spatial/src/EngineState';
 
@@ -22,7 +22,8 @@ export const CellularAutomataGeneratorComponent = defineComponent({
       space: 0.025,
       bottom: 0.5,
       size: 0.1,
-      distance: -2
+      distance: -2,
+      rule: 54 // https://mathworld.wolfram.com/ElementaryCellularAutomaton.html
     }
   },
 
@@ -46,6 +47,9 @@ export const CellularAutomataGeneratorComponent = defineComponent({
     if (json.distance) {
       component.distance.set(json.distance)
     }
+    if (json.rule) {
+      component.rule.set(json.rule)
+    }
   },
 
   toJSON: (entity, component) => {
@@ -55,7 +59,8 @@ export const CellularAutomataGeneratorComponent = defineComponent({
       space: component.space.value,
       bottom: component.bottom.value,
       size: component.size.value,
-      distance: component.distance.value
+      distance: component.distance.value,
+      rule: component.rule.value
     }
   },
 
@@ -65,7 +70,7 @@ export const CellularAutomataGeneratorComponent = defineComponent({
 
     const thisEntity = useEntityContext();
     const generatorComponent = useComponent(thisEntity, CellularAutomataGeneratorComponent);
-    const cellEntitiesState = useHookstate<null|Entity[][]>(null);
+    const cellEntitiesState = useHookstate<null|Entity[][]>(null); 
 
     function createCells() {
 
@@ -88,6 +93,7 @@ export const CellularAutomataGeneratorComponent = defineComponent({
           const entity = createEntity();
           cellEntities[row].push(entity);
           setComponent(entity, NameComponent, `cell-${row}-${col}`);
+          // when done in CellularAutomataCellStateComponent, the generator appears as a cube instead of a sphere
           setComponent(entity, VisibleComponent)
           setComponent(entity, TransformComponent, { 
             position: new Vector3(x, y, z),
@@ -97,9 +103,13 @@ export const CellularAutomataGeneratorComponent = defineComponent({
           setComponent(entity, CellularAutomataCellBehaviorComponent, { 
             inputA: row === 0 || col - 1 < 0 ? deadCellEntity : cellEntities[row - 1][col - 1], 
             inputB: row === 0 ? deadCellEntity : cellEntities[row - 1][col], 
-            inputC: row === 0 || col + 1 >= cols.value ? deadCellEntity : cellEntities[row - 1][col + 1]
+            inputC: row === 0 || col + 1 >= cols.value ? deadCellEntity : cellEntities[row - 1][col + 1],
+            ruleBinary: getRuleBinary(generatorComponent.rule.value)
           });
-          setComponent(entity, CellularAutomataClickableComponent, { shape: 'box' });
+          // Is there a way to hit test without using a physics collider?
+          if(row === 0) {
+            setComponent(entity, CellularAutomataClickableComponent, { shape: 'box' });
+          }
           x += size.value + space.value;
         }
         x = left;
@@ -122,6 +132,18 @@ export const CellularAutomataGeneratorComponent = defineComponent({
     useEffect(() => {
       setCallback(thisEntity, 'onClick', cellEntitiesState.value ? deleteCells : createCells);
     }, [cellEntitiesState.value]);
+
+    useEffect(() => {
+      const rule = generatorComponent.rule.value;
+      setCallback(thisEntity, 'onCtrlClick', () => { 
+        generatorComponent.rule.set(rule === 255 ? 0 : rule + 1); 
+        console.log('inc rule', rule, '->', generatorComponent.rule.value) 
+      });
+      setCallback(thisEntity, 'onShiftClick', () => {
+        generatorComponent.rule.set(rule === 0 ? 255 : rule - 1); 
+        console.log('dec rule', rule, '->', generatorComponent.rule.value) 
+      });
+    }, [generatorComponent.rule.value]);
 
     return null;
   }

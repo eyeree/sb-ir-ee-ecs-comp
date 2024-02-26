@@ -5,6 +5,7 @@ import { addObjectToGroup, removeObjectFromGroup } from '@etherealengine/spatial
 import { Mesh, MeshStandardMaterial, Color, BoxGeometry } from 'three';
 import { VisibleComponent } from '@etherealengine/spatial/src/renderer/components/VisibleComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
+import { useHookstate } from '@etherealengine/hyperflux';
 
 export type CellState = 'dead' | 'alive';
 
@@ -34,12 +35,12 @@ export const CellularAutomataCellStateComponent = defineComponent({
 
     const thisEntity = useEntityContext();
     const cellState = useComponent(thisEntity, CellularAutomataCellStateComponent);
+    const mesh = useHookstate(new Mesh(new BoxGeometry(), new MeshStandardMaterial())).value;
 
     useEffect(() => {
 
-      // Why does this only work when these components are added by the generator?
+      // When done here instead of in the generator component, the generator appears as a cube instead of a sphere
       // setComponent(thisEntity, VisibleComponent)
-      // setComponent(thisEntity, CellularAutomataClickableComponent, { shape: 'box' });
 
       setCallback(thisEntity, 'onClick', () => {
         const newState = cellState.state.value === 'alive' ? 'dead' : 'alive';
@@ -47,16 +48,18 @@ export const CellularAutomataCellStateComponent = defineComponent({
         cellState.set({ state: newState });
       });
 
-    }, []);
-
-    useEffect(() => {
-      const mesh = new Mesh(new BoxGeometry(), new MeshStandardMaterial({ color: StateColors[cellState.state.value] }));
       addObjectToGroup(thisEntity, mesh);
       // console.log('>>>>>', 'addObjectToGroup', thisEntity, mesh);
       return () => {
         removeObjectFromGroup(thisEntity, mesh);
         // console.log('>>>>>', 'removeObjectFromGroup', thisEntity, mesh);
       }
+
+    }, []);
+
+    useEffect(() => {
+      // console.log('>>>>>', 'cellState.state.value', thisEntity, cellState.state.value);
+      mesh.material.color = StateColors[cellState.state.value];
     }, [cellState.state.value]);
 
     return null;

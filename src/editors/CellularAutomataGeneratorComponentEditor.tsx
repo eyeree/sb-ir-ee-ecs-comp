@@ -19,7 +19,16 @@ import { ComponentEditorsState } from '@etherealengine/editor/src/functions/Comp
 export const CellularAutomataGeneratorComponentEditor: EditorComponentType = (props) => {
   const generatorComponent = useComponent(props.entity, CellularAutomataGeneratorComponent)
   return (
-    <NodeEditor description={'Description'} {...props}>
+    <NodeEditor description={'Properties for generated simulation'} name={`Cellular Automata Generator`} {...props}>
+      <InputGroup name="Rule" label="Automata Rule">
+        <NumericInput
+          value={generatorComponent.rule.value}
+          onChange={updateProperty(CellularAutomataGeneratorComponent, 'rule')}
+          onRelease={commitProperty(CellularAutomataGeneratorComponent, 'rule')}
+          min={0}
+          max={255}
+        />
+      </InputGroup>
       <InputGroup name="Rows" label="Number of Rows">
         <NumericInput
           value={generatorComponent.rows.value}
