@@ -64,7 +64,7 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
       const output = cellBehavior.ruleBinary.value[7 - index]; 
       const newCellState:CellState = output === '1' ? 'alive' : 'dead';          
       // console.log('>>>>>', 'behavior input state change', thisEntity, cellState.value, ':', inputAState, inputBState, inputCState, '-->', newCellState );
-      cellState.set({ state: newCellState });
+      cellState.set({ state: newCellState, updated: true });
     }, [inputAState, inputBState, inputCState]);
 
     return null;

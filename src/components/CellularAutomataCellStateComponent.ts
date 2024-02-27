@@ -3,8 +3,6 @@ import { useEffect } from 'react';
 import { setCallback } from '@etherealengine/spatial/src/common/CallbackComponent';
 import { addObjectToGroup, removeObjectFromGroup } from '@etherealengine/spatial/src/renderer/components/GroupComponent';
 import { Mesh, MeshStandardMaterial, Color, BoxGeometry } from 'three';
-import { VisibleComponent } from '@etherealengine/spatial/src/renderer/components/VisibleComponent';
-import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 import { useHookstate } from '@etherealengine/hyperflux';
 
 export type CellState = 'dead' | 'alive';
@@ -14,13 +12,18 @@ const StateColors:Record<CellState, Color> = {
   'dead': new Color(0xffffff)
 };
 
+const UpdatedColor = new Color(0xff0000);
+
+const UpdateDelayMS = 20;
+
 export const CellularAutomataCellStateComponent = defineComponent({
   name: 'CellularAutomataCellStateComponent',
   jsonID: 'sb.cellularAutomata.cellState',
 
   onInit: (entity) => { 
     return {
-      state: 'dead' as CellState
+      state: 'dead' as CellState,
+      updated: false
     };
   },
 
@@ -29,6 +32,9 @@ export const CellularAutomataCellStateComponent = defineComponent({
     if (json.state) {
       component.state.set(json.state)
     }
+    if(json.updated) {
+      component.updated.set(json.updated)
+    }
   },
 
   reactor: () => {
@@ -36,6 +42,7 @@ export const CellularAutomataCellStateComponent = defineComponent({
     const thisEntity = useEntityContext();
     const cellState = useComponent(thisEntity, CellularAutomataCellStateComponent);
     const mesh = useHookstate(new Mesh(new BoxGeometry(), new MeshStandardMaterial())).value;
+    const timeoutIdState = useHookstate<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
 
@@ -45,7 +52,7 @@ export const CellularAutomataCellStateComponent = defineComponent({
       setCallback(thisEntity, 'onClick', () => {
         const newState = cellState.state.value === 'alive' ? 'dead' : 'alive';
         // console.log('>>>>>', 'onClick', thisEntity, cellState.state.value, '-->', newState);
-        cellState.set({ state: newState });
+        cellState.state.set(newState);
       });
 
       addObjectToGroup(thisEntity, mesh);
@@ -59,8 +66,26 @@ export const CellularAutomataCellStateComponent = defineComponent({
 
     useEffect(() => {
       // console.log('>>>>>', 'cellState.state.value', thisEntity, cellState.state.value);
-      mesh.material.color = StateColors[cellState.state.value];
-    }, [cellState.state.value]);
+      mesh.material.color = cellState.updated.value ? UpdatedColor : StateColors[cellState.state.value];
+    }, [cellState.state.value, cellState.updated.value]);
+
+    useEffect(() => {
+      if(cellState.updated.value) {
+        if(timeoutIdState.value) {
+          console.log('>>>>>', 'double update', thisEntity);
+          clearTimeout(timeoutIdState.value);
+        }
+        const timeoutId = setTimeout(() => {
+          cellState.updated.set(false);
+        }, UpdateDelayMS);
+        timeoutIdState.set(timeoutId);
+      } else {
+        if(timeoutIdState.value) {  
+          clearTimeout(timeoutIdState.value);
+          timeoutIdState.set(null);
+        }
+      }
+    }, [cellState.updated.value]);
 
     return null;
 
