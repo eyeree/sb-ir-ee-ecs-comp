@@ -10,6 +10,7 @@ import { CellularAutomataCellStateComponent, deadCellEntity } from './CellularAu
 import { CellularAutomataCellBehaviorComponent, getRuleBinary } from './CellularAutomataCellBehaviorComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 import { EngineState } from '@etherealengine/spatial/src/EngineState';
+import { delay } from '@etherealengine/spatial/src/common/functions/delay';
 
 export const CellularAutomataGeneratorComponent = defineComponent({
   name: 'CellularAutomataGeneratorComponent',
@@ -72,9 +73,9 @@ export const CellularAutomataGeneratorComponent = defineComponent({
     const generatorComponent = useComponent(thisEntity, CellularAutomataGeneratorComponent);
     const cellEntitiesState = useHookstate<null|Entity[][]>(null); 
 
-    function createCells() {
+    async function createCells() {
 
-      // console.log('>>>>>', 'createCells', generatorComponent);
+      console.log('>>>>>', 'createCells A', generatorComponent);
 
       const { rows, cols, space, bottom, size, distance } = generatorComponent;
 
@@ -88,6 +89,7 @@ export const CellularAutomataGeneratorComponent = defineComponent({
       const cellEntities: Entity[][] = [];
 
       for(let row = 0; row < rows.value; row++) {
+        await delay(0);
         cellEntities.push([]);
         for(let col = 0; col < cols.value; col++) {
           const entity = createEntity();
