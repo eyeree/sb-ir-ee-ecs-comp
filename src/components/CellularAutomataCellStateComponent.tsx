@@ -47,7 +47,7 @@ export const CellularAutomataCellStateComponent = defineComponent({
 
     const thisEntity = useEntityContext();
     const cellState = useComponent(thisEntity, CellularAutomataCellStateComponent);
-    const mesh = useHookstate(new Mesh(new BoxGeometry(), new MeshStandardMaterial())).value;
+    const mesh = useHookstate(() => new Mesh(new BoxGeometry(), new MeshStandardMaterial())).value;
 
     return (<>
       <SetGeometry mesh={mesh} />
