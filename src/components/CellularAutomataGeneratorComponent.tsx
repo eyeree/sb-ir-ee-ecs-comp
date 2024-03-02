@@ -5,12 +5,12 @@ import { TransformComponent } from '@etherealengine/spatial';
 import { NameComponent } from '@etherealengine/spatial/src/common/NameComponent';
 import { VisibleComponent } from '@etherealengine/spatial/src/renderer/components/VisibleComponent';
 import { Vector3 } from 'three';
-import { getState, useHookstate } from '@etherealengine/hyperflux';
+import { State, getState, useHookstate } from '@etherealengine/hyperflux';
 import { CellularAutomataCellStateComponent, deadCellEntity } from './CellularAutomataCellStateComponent';
 import { CellularAutomataCellBehaviorComponent, getRuleBinary } from './CellularAutomataCellBehaviorComponent';
 import { CellularAutomataClickableComponent } from './CellularAutomataClickableComponent';
 import { EngineState } from '@etherealengine/spatial/src/EngineState';
-import { delay } from '@etherealengine/spatial/src/common/functions/delay';
+import React from 'react';
 
 export const CellularAutomataGeneratorComponent = defineComponent({
   name: 'CellularAutomataGeneratorComponent',
@@ -71,69 +71,11 @@ export const CellularAutomataGeneratorComponent = defineComponent({
 
     const thisEntity = useEntityContext();
     const generatorComponent = useComponent(thisEntity, CellularAutomataGeneratorComponent);
-    const cellEntitiesState = useHookstate<null|Entity[][]>(null); 
-
-    async function createCells() {
-
-      console.log('>>>>>', 'createCells A', generatorComponent);
-
-      const { rows, cols, space, bottom, size, distance } = generatorComponent;
-
-      const left = 0 - (cols.value * (size.value + space.value)) / 2
-      let x = left;
-      let y = bottom.value;
-      let z = distance.value;
-
-      const scale = new Vector3(size.value, size.value, size.value);
-
-      const cellEntities: Entity[][] = [];
-
-      for(let row = 0; row < rows.value; row++) {
-        await delay(0);
-        cellEntities.push([]);
-        for(let col = 0; col < cols.value; col++) {
-          const entity = createEntity();
-          cellEntities[row].push(entity);
-          setComponent(entity, NameComponent, `cell-${row}-${col}`);
-          // when done in CellularAutomataCellStateComponent, the generator appears as a cube instead of a sphere
-          setComponent(entity, VisibleComponent)
-          setComponent(entity, TransformComponent, { 
-            position: new Vector3(x, y, z),
-            scale: scale
-          });
-          setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
-          setComponent(entity, CellularAutomataCellBehaviorComponent, { 
-            inputA: row === 0 || col - 1 < 0 ? deadCellEntity : cellEntities[row - 1][col - 1], 
-            inputB: row === 0 ? deadCellEntity : cellEntities[row - 1][col], 
-            inputC: row === 0 || col + 1 >= cols.value ? deadCellEntity : cellEntities[row - 1][col + 1],
-            ruleBinary: getRuleBinary(generatorComponent.rule.value)
-          });
-          // Is there a way to hit test without using a physics collider?
-          if(row === 0) {
-            setComponent(entity, CellularAutomataClickableComponent, { shape: 'box' });
-          }
-          x += size.value + space.value;
-        }
-        x = left;
-        y += size.value + space.value;
-      }
-
-      cellEntitiesState.set(cellEntities);
-
-    }
-
-    function deleteCells() {
-      for(const row of cellEntitiesState.value!) {
-        for (const entity of row) {
-          removeEntity(entity)
-        }
-      }
-      cellEntitiesState.set(null);
-    }
+    const showGrid = useHookstate(false);
     
     useEffect(() => {
-      setCallback(thisEntity, 'onClick', cellEntitiesState.value ? deleteCells : createCells);
-    }, [cellEntitiesState.value]);
+      setCallback(thisEntity, 'onClick', () => { showGrid.set(!showGrid.value) });
+    }, [showGrid]);
 
     useEffect(() => {
       const rule = generatorComponent.rule.value;
@@ -147,7 +89,93 @@ export const CellularAutomataGeneratorComponent = defineComponent({
       });
     }, [generatorComponent.rule.value]);
 
-    return null;
+    return showGrid.value ? <Grid {...generatorComponent.value}/> : <></>;
   }
 });
 
+type EntitiesProp = { entities: State<Entity[][]> }
+type GridProps = typeof CellularAutomataGeneratorComponent["_TYPE"] 
+type RowProps = GridProps & { row:number } & EntitiesProp;
+type CellProps = GridProps & { row:number, col:number } & EntitiesProp;
+
+function Grid(props:GridProps) {
+  const entities = useHookstate<Entity[][]>(() => {
+    const { rows, cols } = props;
+    return Array.from({ length: rows }, 
+      () => Array.from({ length: cols }, 
+        () => -1 as Entity)
+    );
+  });
+  return (
+    <>
+      {range(props.rows).map(
+        row => <Row key={row} row={row} entities={entities} {...props} />
+      )}
+    </>
+  ) 
+}
+
+function Row(props:RowProps) {
+  return (
+    <>
+      {range(props.cols).map(
+        col => <Cell key={col} col={col} {...props} />
+      )}
+    </>
+  )
+}
+
+function Cell(props:CellProps) {
+
+  useEffect(() => {
+
+    const { row, col, entities } = props;
+    const position = getCellPosition(props);
+    const scale = new Vector3(props.size, props.size, props.size);
+  
+    const entity = createEntity();
+    entities[row][col].set(entity);
+
+    setComponent(entity, NameComponent, `cell-${row}-${col}`);
+    setComponent(entity, VisibleComponent)
+    setComponent(entity, TransformComponent, { position, scale });
+    setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
+    setComponent(entity, CellularAutomataCellBehaviorComponent, { 
+      inputA: row === 0 || col - 1 < 0 ? deadCellEntity : entities[row - 1][col - 1].value, 
+      inputB: row === 0 ? deadCellEntity : entities[row - 1][col].value, 
+      inputC: row === 0 || col + 1 >= props.cols ? deadCellEntity : entities[row - 1][col + 1].value,
+      ruleBinary: getRuleBinary(props.rule)
+    });
+
+    // Is there a way to hit test without using a physics collider?
+    if(row === 0) {
+      setComponent(entity, CellularAutomataClickableComponent, { shape: 'box' });
+    }
+
+    return () => { removeEntity(entity) };
+  
+  }, [props]);
+
+  return <></>;
+}
+
+
+function getCellPosition(props: GridProps & { row: number; col: number; }) {
+  const { row, col, space, bottom, size, distance, cols } = props;
+  const left = 0 - (cols * (size + space)) / 2
+  const x = left + col * (size + space);
+  const y = bottom + row * (size + space);
+  const z = distance;
+  return new Vector3( x, y, z );
+}
+
+function range(startOrEnd:number, end?:number) {
+  if(end === undefined) {
+    end = startOrEnd;
+    startOrEnd = 0;
+  }
+  return Array.from(
+    { length: end - startOrEnd }, 
+    (_, i) => i + startOrEnd
+  );
+}
