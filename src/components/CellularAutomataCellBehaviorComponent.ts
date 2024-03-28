@@ -1,12 +1,12 @@
-import { Entity, defineComponent, useComponent, useEntityContext } from '@etherealengine/ecs';
+import { Entity, defineComponent, linkComponentProperties, useComponent, useEntityContext } from '@etherealengine/ecs';
 import { useEffect } from 'react';
 import { CellState, CellularAutomataCellStateComponent, deadCellEntity } from './CellularAutomataCellStateComponent';
 
 export type CellInput = Entity
 export type CellComponentType = {
-  inputA: CellInput,
-  inputB: CellInput,
-  inputC: CellInput,
+  inputAState: CellState,
+  inputBState: CellState,
+  inputCState: CellState,
   ruleBinary: string
 }
 
@@ -20,9 +20,9 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
 
   onInit: (entity) => { 
     return {
-      inputA: deadCellEntity,
-      inputB: deadCellEntity,
-      inputC: deadCellEntity,
+      inputAState: 'dead',
+      inputBState: 'dead',
+      inputCState: 'dead',
       ruleBinary: getRuleBinary(30)
     }
   },
@@ -30,14 +30,14 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
   onSet: (entity, component, json) => {
     if (!json) return
     // console.log('>>>>>', 'onSet', entity, json);
-    if (json.inputA) {
-      component.inputA.set(json.inputA)
+    if (json.inputAState) {
+      component.inputAState.set(json.inputAState)
     }
-    if (json.inputB) {
-      component.inputB.set(json.inputB)
+    if (json.inputBState) {
+      component.inputBState.set(json.inputBState)
     }
-    if (json.inputC) {
-      component.inputC.set(json.inputC)
+    if (json.inputCState) {
+      component.inputCState.set(json.inputCState)
     }
     if (json.ruleBinary) {
       component.ruleBinary.set(json.ruleBinary)
@@ -46,26 +46,18 @@ export const CellularAutomataCellBehaviorComponent = defineComponent<CellCompone
 
   reactor: function () {
     const thisEntity = useEntityContext();
-    const cellBehavior = useComponent(thisEntity, CellularAutomataCellBehaviorComponent);
+    const {inputAState, inputBState, inputCState, ruleBinary} = useComponent(thisEntity, CellularAutomataCellBehaviorComponent).get();
     const cellState = useComponent(thisEntity, CellularAutomataCellStateComponent);
-    
-    const inputAStateComponent = useComponent(cellBehavior.inputA.value, CellularAutomataCellStateComponent);
-    const inputBStateComponent = useComponent(cellBehavior.inputB.value, CellularAutomataCellStateComponent);
-    const inputCStateComponent = useComponent(cellBehavior.inputC.value, CellularAutomataCellStateComponent);
-
-    const inputAState = inputAStateComponent.state.value;
-    const inputBState = inputBStateComponent.state.value;
-    const inputCState = inputCStateComponent.state.value;
 
     // console.log('>>>>>', 'behavior', thisEntity, cellState.value, ':', cellBehavior.inputA.value, inputAState, cellBehavior.inputB.value, inputBState, cellBehavior.inputC.value, inputCState );
-    
+
     useEffect(() => {
       const index = ((inputAState === 'alive' ? 1 : 0) << 2) | ((inputBState === 'alive' ? 1 : 0) << 1) | (inputCState === 'alive' ? 1 : 0);  
-      const output = cellBehavior.ruleBinary.value[7 - index]; 
+      const output = ruleBinary[7 - index]; 
       const newCellState:CellState = output === '1' ? 'alive' : 'dead';          
       // console.log('>>>>>', 'behavior input state change', thisEntity, cellState.value, ':', inputAState, inputBState, inputCState, '-->', newCellState );
       cellState.set({ state: newCellState, updated: true });
-    }, [inputAState, inputBState, inputCState]);
+    }, [inputAState, inputBState, inputCState, ruleBinary]);
 
     return null;
   }

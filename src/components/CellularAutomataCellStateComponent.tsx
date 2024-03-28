@@ -15,7 +15,7 @@ const StateColors:Record<CellState, Color> = {
 
 const UpdatedColor = new Color(0xff0000);
 
-const UpdateDelayMS = 20;
+const UpdateDelayMS = 5;
 
 // export type CellularAutomataCellStateComponentType = {
 //   state: CellState,

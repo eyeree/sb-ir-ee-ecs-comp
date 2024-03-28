@@ -1,4 +1,4 @@
-import { Entity, createEntity, defineComponent, setComponent, useComponent, useEntityContext, removeEntity } from '@etherealengine/ecs';
+import { Entity, createEntity, defineComponent, setComponent, useComponent, useEntityContext, removeEntity, linkComponentProperties } from '@etherealengine/ecs';
 import { useEffect } from 'react';
 import { setCallback } from '@etherealengine/spatial/src/common/CallbackComponent';
 import { TransformComponent } from '@etherealengine/spatial';
@@ -93,10 +93,10 @@ export const CellularAutomataGeneratorComponent = defineComponent({
   }
 });
 
-type EntitiesProp = { entities: State<Entity[][]> }
+type GridStateProps = { entities: State<Entity[][]>, ruleBinary:string, scale: Vector3 }
 type GridProps = typeof CellularAutomataGeneratorComponent["_TYPE"] 
-type RowProps = GridProps & { row:number } & EntitiesProp;
-type CellProps = GridProps & { row:number, col:number } & EntitiesProp;
+type RowProps = GridProps & { row:number } & GridStateProps;
+type CellProps = GridProps & { row:number, col:number } & GridStateProps;
 
 function Grid(props:GridProps) {
   const entities = useHookstate<Entity[][]>(() => {
@@ -106,10 +106,12 @@ function Grid(props:GridProps) {
         () => -1 as Entity)
     );
   });
+  const scale = useHookstate(() =>  new Vector3(props.size, props.size, props.size));
+  const ruleBinary = useHookstate(() => getRuleBinary(props.rule));
   return (
     <>
       {range(props.rows).map(
-        row => <Row key={row} row={row} entities={entities} {...props} />
+        row => <Row key={row} row={row} entities={entities} scale={scale.value} ruleBinary={ruleBinary.value} {...props} />
       )}
     </>
   ) 
@@ -129,9 +131,8 @@ function Cell(props:CellProps) {
 
   useEffect(() => {
 
-    const { row, col, entities } = props;
+    const { row, col, entities, scale, ruleBinary } = props;
     const position = getCellPosition(props);
-    const scale = new Vector3(props.size, props.size, props.size);
   
     const entity = createEntity();
     entities[row][col].set(entity);
@@ -141,11 +142,33 @@ function Cell(props:CellProps) {
     setComponent(entity, TransformComponent, { position, scale });
     setComponent(entity, CellularAutomataCellStateComponent, { state: 'dead' });
     setComponent(entity, CellularAutomataCellBehaviorComponent, { 
-      inputA: row === 0 || col - 1 < 0 ? deadCellEntity : entities[row - 1][col - 1].value, 
-      inputB: row === 0 ? deadCellEntity : entities[row - 1][col].value, 
-      inputC: row === 0 || col + 1 >= props.cols ? deadCellEntity : entities[row - 1][col + 1].value,
-      ruleBinary: getRuleBinary(props.rule)
+      inputAState: 'dead',
+      inputBState: 'dead',
+      inputCState: 'dead',
+      ruleBinary
     });
+
+    const inputAEntity = row === 0 || col - 1 < 0 ? deadCellEntity : entities[row - 1][col - 1].value;
+    const inputBEntity = row === 0 ? deadCellEntity : entities[row - 1][col].value;
+    const inputCEntity = row === 0 || col + 1 >= props.cols ? deadCellEntity : entities[row - 1][col + 1].value;
+
+    const removeInputALink = linkComponentProperties(
+      inputAEntity, CellularAutomataCellStateComponent, 'state',
+      entity, CellularAutomataCellBehaviorComponent, 'inputAState',
+      value => value
+    );
+
+    const removeInputBLink = linkComponentProperties(
+      inputBEntity, CellularAutomataCellStateComponent, 'state',
+      entity, CellularAutomataCellBehaviorComponent, 'inputBState',
+      value => value
+    );
+
+    const removeInputCLink = linkComponentProperties(
+      inputCEntity, CellularAutomataCellStateComponent, 'state',
+      entity, CellularAutomataCellBehaviorComponent, 'inputCState',
+      value => value
+    );
 
     // Is there a way to hit test without using a physics collider?
     if(row === 0) {
@@ -158,7 +181,6 @@ function Cell(props:CellProps) {
 
   return <></>;
 }
-
 
 function getCellPosition(props: GridProps & { row: number; col: number; }) {
   const { row, col, space, bottom, size, distance, cols } = props;
